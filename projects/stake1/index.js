@@ -16,15 +16,15 @@ async function TVL(){
   const [tvl,setTvl] = useState<string>("")
 
   const fetchData = async () => {
-    if(!(active && account && library)) return
+     if(!(active && account && library)) return
 
-    const ftmvault_address = '0x344231DC9ea535Fd11ccCedC3567E614563c21B4'
-    const tombvault_address = '0xd5B7Ee6628d478a494a73c00EbbC0f7A3C2fF86D'
-    const avaxvault_address = '0x26afcBA425Ea975FD1B9304B0B30D54b5A493392'
-    const ethvault_address = '0xEF66d9E6A4326a720488EEea5046b8923485B6FA'
-    const farms_address = '0xE44D075C8F993Ac5Da7bdeF9046785B6686776ce'
+    const ftmvault_address = '0x3d2fa78f5e1aa2e7f29c965d0e22b32b8d5f14a9'
+    const tombvault_address = '0xA222fb9D2A811FAb3B334a5a9FA573C11fee73c1'
+    const avaxvault_address = '0x1689D5C5866909569a98B35da6A24090e4931C17'
+    const ethvault_address = '0xf9448f9a932474B5cAd9F05b86EA12376f2Fd770'
+    const farms_address = '0x56995c729296c634cA367F8F3e5E5dEFF30D4511'
 
-    //USDC
+    //DAI
     const addressCollateral = "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E"
     //WFTM
     const addressWFTM = "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83"
@@ -42,6 +42,15 @@ async function TVL(){
 
     //address of the contract requesting approval (FTM-STAKE1 LP)
     const ftmstake1_address = '0xb485E403BfEe11BD347564684170a559C71D4ec0'
+
+    const mim_address = '0x82f0B8B456c1A451378467398982d4834b6829c1'
+    const mai_address = '0xfB98B335551a418cD0737375a2ea0ded62Ea213b'
+    const dai_address = '0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E'
+    const usdc_address = '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75'
+    const frax_address = '0xdc301622e621166BD8E82f2cA0A26c13Ad0BE355'
+
+    const s1usdc_address = '0x95622f2f1C9249c9eFD096cDB4fF7Cd7E9728370'
+    const stable1_address = '0xD58cB383B0d75cA078d9c88D493D86D8aC4d9b7d'
 
     const ftmvault = new ethers.Contract(ftmvault_address, VAULTS, library.getSigner());
     const avaxvault = new ethers.Contract(avaxvault_address, TOMBVAULTS, library.getSigner());
@@ -136,14 +145,38 @@ async function TVL(){
 
     const stake1ftmtvl = Number(ftmlpstaked_format)*Number(lp_price)
 
-    const totaltvl = ((+ftm_tvl + +eth_tvl)/(100000000*1000000000000000000)) + +avax_tvl + +tomb_tvl +stake1daitvl + +stake1ftmtvl + +Number(dai_in_ftmvault_formatted) + +Number(dai_in_ethvault_formatted) + +Number(dai_in_avaxvault_formatted) + +Number(dai_in_tombvault_formatted);
+    //STABLE1
+    const stable1 = new ethers.Contract(stable1_address, STABLE1, library.getSigner());
 
-    return totaltvl
+    const mai = new ethers.Contract(mai_address, STABLE1, library.getSigner());
+    const mim = new ethers.Contract(mim_address, STABLE1, library.getSigner());
+    const frax = new ethers.Contract(frax_address, STABLE1, library.getSigner());
+
+    const dai_in_stable1 = await dai.balanceOf(stable1_address)
+    const mai_in_stable1 = await mai.balanceOf(stable1_address)
+    const mim_in_stable1 = await mim.balanceOf(stable1_address)
+    const frax_in_stable1 = await frax.balanceOf(stable1_address)
+
+    const usdc_in_stable1 = new ethers.Contract(usdc_address, STABLE1, library.getSigner());
+    const usdc_in_s1usdc = await usdc_in_stable1.balanceOf(s1usdc_address)
+
+    const dai_in_stable1_formatted = formatEther(dai_in_stable1)
+    const mai_in_stable1_formatted = formatEther(mai_in_stable1)
+    const mim_in_stable1_formatted = formatEther(mim_in_stable1)
+    const frax_in_stable1_formatted = formatEther(frax_in_stable1)
+    const usdc_in_stable1_formatted = formatEther(usdc_in_s1usdc)
+
+    const totaltvl = ((+ftm_tvl + +eth_tvl)/(100000000*1000000000000000000)) + +avax_tvl + +tomb_tvl +stake1daitvl + +stake1ftmtvl + +Number(dai_in_ftmvault_formatted) + +Number(dai_in_ethvault_formatted) + +Number(dai_in_avaxvault_formatted) + +Number(dai_in_tombvault_formatted) +Number(dai_in_stable1_formatted) + +Number(mai_in_stable1_formatted) + +Number(mim_in_stable1_formatted) + +Number(frax_in_stable1_formatted) + +Number(usdc_in_stable1_formatted);
+
+    const tvlstring = "Total Value Locked: $"+totaltvl.toLocaleString('en', {minimumFractionDigits: 2,maximumFractionDigits: 2})
+
+    return total
+  }
   }
 
 module.exports={
     fantom:{
-        tvl
+        totaltvl
     }
 }
 
